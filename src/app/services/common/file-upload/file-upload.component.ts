@@ -1,59 +1,110 @@
-// import { Component } from '@angular/core';
-// import { NgxFileDropEntry } from 'ngx-file-drop';
+import { HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { Component, Input } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
+import { NgxFileDropEntry } from 'ngx-file-drop';
+import { FileUploadDialogComponent, FileUploadDialogState } from 'src/app/dialogs/file-upload-dialog/file-upload-dialog.component';
+import { AlertifyService, MessageType, Position } from '../../admin/alertify.service';
+import { CustomToastrService, ToastrMessageType, ToastrPosition } from '../../ui/custom-toastr.service';
+import { DialogService } from '../dialog.service';
+import { HttpClientService } from '../http-client.service';
 
-// @Component({
-//   selector: 'app-file-upload',
-//   templateUrl: './file-upload.component.html',
-//   styleUrls: ['./file-upload.component.scss']
-// })
-// export class FileUploadComponent {
+@Component({
+  selector: 'app-file-upload',
+  templateUrl: './file-upload.component.html',
+  styleUrls: ['./file-upload.component.scss']
+})
+export class FileUploadComponent {
 
-//   public files: NgxFileDropEntry[];
+  constructor(
+    private httpClient:HttpClientService, 
+    private toastrService:CustomToastrService, 
+    private alertify:AlertifyService,
+    private dialog:MatDialog,
+    private dialogService:DialogService){
+  
+  }
 
-//   public dropped(files: NgxFileDropEntry[]) {
-//     this.files = files;
-//     for (const droppedFile of files) {
+  public files: NgxFileDropEntry[];
 
-//       // Is it a file?
-//       if (droppedFile.fileEntry.isFile) {
-//         const fileEntry = droppedFile.fileEntry as FileSystemFileEntry;
-//         fileEntry.file((file: File) => {
+  @Input() options:Partial<FileUploadOptions>;
 
-//           // Here you can access the real file
-//           console.log(droppedFile.relativePath, file);
+  public selectedFiles(files: NgxFileDropEntry[]) {
+    this.files = files;
 
-//           /**
-//           // You could upload it like this:
-//           const formData = new FormData()
-//           formData.append('logo', file, relativePath)
+    const fileData: FormData = new FormData();
+    for(const file of files){
+      (file.fileEntry as FileSystemFileEntry).file((_file: File)=>{
+        fileData.append(_file.name, _file, file.relativePath);
+      })
+    }
 
-//           // Headers
-//           const headers = new HttpHeaders({
-//             'security-token': 'mytoken'
-//           })
+    this.dialogService.openDialog({
+      componentType:FileUploadDialogComponent,
+      data:FileUploadDialogState.Yes,
+      afterClosed: ()=> {
+        this.httpClient.post({
+          controller:this.options.controller,
+          action:this.options.action,
+          queryString:this.options.queryString,
+          headers: new HttpHeaders({"responseType": "blob"})
+        }, fileData).subscribe(data => {
+          
+          const message = "Dosyalar başrıyla yüklenmiştir.";
+  
+          if(this.options.isAdminPage){
+          this.alertify.message(message,{
+              dismissOthers:true,
+              messageType:MessageType.Success,
+              position:Position.BottomCenter
+            })
+          }else{
+            this.toastrService.message(message, "Başarılı.", {
+              messageType:ToastrMessageType.Succsess,
+              position: ToastrPosition.BottomCenter
+            })
+          }
+        }, (errorResponse: HttpErrorResponse) =>{
+       
+          const message = "Dosyalar yüklenemedi.";
+  
+          if(this.options.isAdminPage){
+            this.alertify.message(message,{
+              dismissOthers:true,
+              messageType:MessageType.Error,
+              position:Position.BottomCenter
+            })
+          }else{
+            this.toastrService.message(message, "Başarısız!",{
+              messageType:ToastrMessageType.Error,
+              position: ToastrPosition.BottomCenter
+            })
+          }
+        });
+      }
+    })
+  }
 
-//           this.http.post('https://mybackend.com/api/upload/sanitize-and-save-logo', formData, { headers: headers, responseType: 'blob' })
-//           .subscribe(data => {
-//             // Sanitized logo returned from backend
-//           })
-//           **/
 
-//         });
-//       } else {
-//         // It was a directory (empty directories are added, otherwise only files)
-//         const fileEntry = droppedFile.fileEntry as FileSystemDirectoryEntry;
-//         console.log(droppedFile.relativePath, fileEntry);
-//       }
-//     }
-//   }
+  // openDialog(afterClosed:any): void {
+  //   const dialogRef = this.dialog.open(FileUploadDialogComponent, {
+  //     width: '250px',
+  //     data: FileUploadDialogState.Yes,
+  //   });
 
-//   public fileOver(event){
-//     console.log(event);
-//   }
+  //   dialogRef.afterClosed().subscribe(result => {
+  //     if(result== FileUploadDialogState.Yes){
+  //       afterClosed();
+  //     }
+  //   });
+  // }
 
-//   public fileLeave(event){
-//     console.log(event);
-//   }
-// }
+}
 
-
+export class FileUploadOptions{
+  controller?:string;
+  action?:string;
+  queryString?:string;
+  explanation?:string;
+  accept?:string;
+  isAdminPage:boolean = false;
+}

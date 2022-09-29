@@ -4,7 +4,9 @@ import { MatTableDataSource, _MatTableDataSource } from '@angular/material/table
 import { NgxSpinnerService } from 'ngx-spinner';
 import { BaseComponent, SpinnerType } from 'src/app/base/base.component';
 import { List_Product } from 'src/app/contracts/list_product';
+import { SelectProductImageComponent } from 'src/app/dialogs/select-product-image/select-product-image.component';
 import { AlertifyService, MessageType, Position } from 'src/app/services/admin/alertify.service';
+import { DialogService } from 'src/app/services/common/dialog.service';
 import { ProductService } from 'src/app/services/common/models/product.service';
 
 declare var $:any
@@ -16,12 +18,15 @@ declare var $:any
 })
 export class ListComponent extends BaseComponent implements OnInit {
 
-  constructor(spinner:NgxSpinnerService, private productService:ProductService, private alertify:AlertifyService) {
+  constructor(spinner:NgxSpinnerService, 
+    private productService:ProductService, 
+    private alertify:AlertifyService,
+    private dialogService:DialogService) {
     super(spinner)
    }
 
 
-  displayedColumns: string[] = ['name', 'stock', 'price', 'createdDate','updatedDate','edit', 'delete'];
+  displayedColumns: string[] = ['name', 'stock', 'price', 'createdDate','updatedDate','photo','edit', 'delete'];
   dataSource:MatTableDataSource<List_Product> = null;
   @ViewChild(MatPaginator) paginator: MatPaginator;
 
@@ -38,11 +43,15 @@ export class ListComponent extends BaseComponent implements OnInit {
     this.paginator.length = allProducts.totalCount;
   }
 
-  
-  // delete(id, event){
-  //   const img:HTMLImageElement = event.srcElement;
-  //   $(img.parentElement.parentElement).fadeOut(500);
-  // }
+  addProductImages(id:string){
+    this.dialogService.openDialog({
+      componentType:SelectProductImageComponent,
+      data : id,
+      options:{
+        width:"1400px"
+      }
+    })
+  }
   
   async pageChanged(){
     await this.getProducts();
