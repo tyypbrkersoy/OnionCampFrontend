@@ -1,4 +1,6 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
+import { AuthService } from './services/common/auth.service';
 import {
   CustomToastrService,
   ToastrMessageType,
@@ -11,9 +13,20 @@ import {
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent {
-  title = 'OnionCampFrontend';
+  constructor(public authService:AuthService,
+    private toastr:CustomToastrService,
+    private router:Router) {
+    authService.identityCheck();
+  }
 
-  constructor() {}
-
-
+  signOut(){
+    localStorage.removeItem("accessToken");
+    this.authService.identityCheck();
+    this.toastr.message("Çıkış Yapıldı.", "", {
+      messageType:ToastrMessageType.Info,
+      position:ToastrPosition.BottomCenter
+    })
+    this.router.navigate([""]);
+  }
+ 
 }
