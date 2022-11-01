@@ -54,7 +54,7 @@ export class DeleteDirective {
               height:"toggle"
           },700, ()=>{
             this.callback.emit();
-            this.alertify.message("Ürünü sildin la!", {
+            this.alertify.message("Ürünü sildin!", {
               dismissOthers:true,
               messageType:MessageType.Success,
               position:Position.BottomCenter
@@ -62,7 +62,7 @@ export class DeleteDirective {
             });
           }, (errorRespone:HttpErrorResponse)=>{
             this.spinner.hide(SpinnerType.SquareJellyBox);
-            this.alertify.message("Silerken Beklenmedik Bir Sorun Çıktı La!",{
+            this.alertify.message("Silerken Beklenmedik Bir Sorun Çıktı!",{
               dismissOthers:true,
               messageType:MessageType.Warning,
               position:Position.BottomCenter

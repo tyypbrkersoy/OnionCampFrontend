@@ -20,7 +20,7 @@ export class AppComponent {
   }
 
   signOut(){
-    localStorage.removeItem("accessToken");
+    localStorage.clear();
     this.authService.identityCheck();
     this.toastr.message("Çıkış Yapıldı.", "", {
       messageType:ToastrMessageType.Info,
